@@ -1,29 +1,43 @@
 library(data.table)
-library(skimr)
-library(ggplot2)
 library(xgboost)
+library(DiagrammeR)
 
-# Load data -----
-# Note: here we assume that the data extraction and integration is
-# already done.
-dev <- fread('data/application_train.csv', stringsAsFactors = FALSE)
-names(dev) <- tolower(names(dev))
-descr <- fread('data/HomeCredit_columns_description.csv', stringsAsFactors = FALSE)
+# Load data ----
+load('stage/dev.Rdata')
+load('stage/test.Rdata')
 
-# Data exploration
-skim_dev <- data.table(skim(dev))
+# Corvert to xgb.DMatrix format
+train <- list(train = as.matrix(dev[, -"target", with=FALSE])
+            ,label = dev$target
+)
+train <- xgb.DMatrix(data=train$train, label=train$label)
+test2 <- list(test = as.matrix(test[, -"target", with=FALSE])
+              ,label = test$target
+)
+test2 <- xgb.DMatrix(data=test2$test, label=test2$label)
 
-# Quickly explore character variables ----
-cols <- unique(skim_dev[skim_dev$type == 'character']$variable)
-skim_dev_chr <- data.table()
-for(i in cols){
-  r <- dev[, .(.N), by = i]
-  names(r)[1] <- "value"
-  r$var <- i
-  skim_dev_chr <- rbind(skim_dev_chr, r[,.(var, value, N)])
-}
-# Practically the empty fields and the XNA value are the missing ones
-# so we convert these values to missing
-test <- dev[, lapply(.SD, function(x){ifelse(x %in% c('','XNA'), NA, x)})
-            , .SDcols = cols]
+# Variable selection based on feature importance ----
+# https://cran.r-project.org/web/packages/xgboost/vignettes/xgboostPresentation.html
+# https://xgboost.readthedocs.io/en/latest/R-package/xgboostPresentation.html
+xgb <- xgboost(data = train,
+               eta = 1,
+               max_depth = 6,
+               nround = 5,
+               verbose = 2,
+               objective = "binary:logistic",
+               nthread = 4
+)
+
+xgb_importance <- xgb.importance(model=xgb)
+print(xgb_importance)
+xgb.plot.importance(importance_matrix = xgb_importance)
+xgb.save(model = xgb, 'artifacts/pre_trained.model')
+save(xgb_importance, file = 'artifacts/xgb_importance.Rdata')
+
+# Validation ----
+pred <- predict(xgb, train)
+pred <- ifelse(pred > 0.5, 1, 0)
+
+# Retrain then model with the top 6 features ----
+features <- xgb_importance[1:6,]$Feature
 
