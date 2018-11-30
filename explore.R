@@ -1,6 +1,6 @@
 library(data.table)
 library(skimr)
-library(ggplot2)
+library(mltools)
 
 # Load data -----
 # Note: here we assume that the data extraction and integration is
@@ -15,6 +15,8 @@ skim_dev <- data.table(skim(dev))
 
 # Quickly explore character variables ----
 cols <- unique(skim_dev[skim_dev$type == 'character']$variable)
+# We drop two flags from the list (see later)
+cols <- cols[!(cols %in% c('flag_own_realty','flag_own_car'))]
 skim_dev_chr <- data.table()
 for(i in cols){
   r <- dev[, .(.N), by = i]
@@ -24,12 +26,12 @@ for(i in cols){
 }
 # Practically the empty fields and the XNA values are the missing ones
 # so we convert these values to missing
-dev[, (cols) := lapply(.SD, function(x) ifelse(x %in% c('','XNA'), NA, x))
-      , .SDcols = cols]
-# We also need to convert the character variables to factor levels (numeric)
-# because the xgb.DMatrix only read numeric variables
-dev[, (cols) := lapply(.SD, function(x) as.numeric(as.factor(x)))
-      , .SDcols = cols]
+dev[, (cols) := lapply(.SD, function(x) ifelse(x %in% c('XNA',''), '', x))
+    , .SDcols = cols]
+dev[, (cols) := lapply(.SD, function(x) factor(as.numeric(factor(x)), ordered = F))
+    , .SDcols = cols]
+# One_hot encoding of categrical variables
+dev <- one_hot(dev, naCols=TRUE)
 rm('r', 'cols') # cleanup
 
 # Quickly explore flag variables ----
@@ -54,9 +56,9 @@ drop <- c('sk_id_curr'
   ,'fondkapremont_mode'
   ,'flag_cont_mobile'
   ,'flag_mobil'
-  ,'ext_source_1'
-  ,'ext_source_2'
-  ,'ext_source_3'
+  # ,'ext_source_1'
+  # ,'ext_source_2'
+  # ,'ext_source_3'
   , skim_dev_num[rat_missing>0.3,]$variable
 )
 drop <- unique(drop)
@@ -71,6 +73,6 @@ dev_ids <- sample(seq_len(nrow(dev)), size = smpl_size, replace = FALSE)
 test <- dev[-dev_ids,]
 dev <- dev[dev_ids,]
 
-# Same samples ----
+# Save samples ----
 save(test, file = 'stage/test.Rdata')
 save(dev, file ='stage/dev.Rdata')
