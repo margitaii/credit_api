@@ -3,7 +3,7 @@
 FROM trestletech/plumber:latest
 
 # install data.table
-RUN R -e "install.packages('data.table')"
+RUN R -e "install.packages(c('data.table','xgboost','pROC','jsonlite','png')"
 
 # copy everything from the current directory into the container
 COPY / /

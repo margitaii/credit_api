@@ -1,5 +1,7 @@
 # plumber.R
-# API prototype of our XGBoost SC model
+#' @apiTitle CREDIT API
+#' @apiDescription Home Credit application data with XGBoost
+
 library(data.table)
 library(xgboost)
 library(pROC)
@@ -10,25 +12,28 @@ library(png)
 model <- xgb.load('artifacts/pre_trained.model')
 load('artifacts/importance.Rdata')
 
-#* Gives the 30 most important features
-#* @json
-#* @get /features/list
+#' Gives the 30 most important features
+#' @json
+#' @get /features/list
 function(){
   xgb_importance[1:30]
 }
 
-#* Plots the 30 most important features
-#* @png
-#* @get /features/plot
+#' Plots the 30 most important features
+#' @png
+#' @get /features/plot
 function(){
    xgb.plot.importance(xgb_importance[1:30])
 }
 
-#* Scores a sample and returns the score vector
-#* in a JSON file
-#* @param smpl
-#* @get /score
-#* @post /score
-function(smpl){
-  sum(as.numeric(smpl$target))
+#' Scores a single client
+#' @post /score
+function(req){
+  req <- fromJSON(req$postBody)
+  req <- data.table(req)
+  
+  smpl <- xgb.DMatrix(data = as.matrix(req[, -"target", with=FALSE])
+                     , label = req$target)
+  predict(model, smpl)
+  #req
 }

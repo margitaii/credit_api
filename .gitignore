@@ -1,4 +1,5 @@
 data
 stage
 .Rhistory
+.RData
 

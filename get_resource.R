@@ -8,12 +8,18 @@ url <- 'http://localhost:8000'
 
 # xmpl 1
 resource <- '/features/list'
-r <- GET(paste0(url, resource)) %>%
+rsp <- GET(paste0(url, resource)) %>%
   content(as = "text", encoding = 'UTF-8') %>%
   fromJSON(simplifyDataFrame = T)
 
 # xmpl 2
 resource <- '/score'
-r <- POST(paste0(url, resource), body = list(target = c(1,2,3))) %>%
+load('stage/test.Rdata')
+
+r <- POST(paste0(url, resource)
+          , body = test[1:100,]
+          , encode = 'json') %>%
   content(as = "text", encoding = 'UTF-8') %>%
   fromJSON(simplifyDataFrame = T)
+
+
