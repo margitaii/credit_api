@@ -1,12 +1,23 @@
+# Stage 1
+FROM rocker/r-ver:latest
 
-# start from the rocker/r-ver:3.5.0 image
+RUN R -e "install.packages(c('data.table','skimr','mltools','xgboost'))"
+COPY . .
+RUN mkdir artifacts
+RUN mkdir stage
+
+RUN Rscript explore.R
+RUN Rscript model.R
+
+# Stage 2
+
 FROM trestletech/plumber:latest
 
-# install data.table
 RUN R -e "install.packages(c('data.table','xgboost','pROC','jsonlite','png'))"
 
-# copy everything from the current directory into the container
-COPY / /
+# copy artifacts from the builder
+COPY . .
+COPY --from=0 ./artifacts ./artifacts
 
 # open port 8000 to traffic
 EXPOSE 8000
