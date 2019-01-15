@@ -3,8 +3,12 @@ FROM rocker/r-ver:latest
 
 RUN R -e "install.packages(c('data.table','skimr','mltools','xgboost'))"
 COPY . .
-RUN mkdir artifacts
-RUN mkdir stage
+RUN mkdir artifacts \
+	&&  mkdir stage \
+	&& mkdir data \
+	&& apt-get update \
+	&& apt-get install -y awscli
+RUN aws s3 sync s3://creditapi ./data
 
 RUN Rscript explore.R
 RUN Rscript model.R

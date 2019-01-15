@@ -19,3 +19,8 @@ https://medium.com/@skyetetra/using-docker-to-deploy-an-r-plumber-api-863ccf9151
 
 ### SFTP
 Be aware that when you SFTP to the instant use the ubuntu user for file copy andafter that change the owner and the group of the file with chown and chgrp shall commands.
+
+### Jupyter notebook setup on AWS
+https://chrisalbon.com/software_engineering/cloud_computing/run_project_jupyter_on_amazon_ec2/
+
+
