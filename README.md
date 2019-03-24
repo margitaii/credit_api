@@ -23,4 +23,9 @@ Be aware that when you SFTP to the instant use the ubuntu user for file copy and
 ### Jupyter notebook setup on AWS
 https://chrisalbon.com/software_engineering/cloud_computing/run_project_jupyter_on_amazon_ec2/
 
+If you have an existing R installation that you want to use it jupyter:
+Start R
 
+install.packages(c('rzmq','repr','IRkernel','IRdisplay'),
+                 repos = c('http://irkernel.github.io/', getOption('repos')))
+IRkernel::installspec()
