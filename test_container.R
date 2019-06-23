@@ -3,8 +3,8 @@ library(jsonlite)
 library(magrittr)
 
 load('stage/test.Rdata')
-#url <- 'http://ec2-54-93-75-75.eu-central-1.compute.amazonaws.com:8000'
-url <- 'http://localhost:8000'
+url <- 'http://[your-EC2-instance-ip].eu-central-1.compute.amazonaws.com:8000'
+#url <- 'http://localhost:8000'
 
 # xmpl 1
 resource <- '/features/list'
@@ -16,7 +16,7 @@ rsp <- GET(paste0(url, resource)) %>%
 resource <- '/score'
 load('stage/test.Rdata')
 
-r <- POST(paste0(url, resource)
+rsp2 <- POST(paste0(url, resource)
           , body = test[1:100,]
           , encode = 'json') %>%
   content(as = "text", encoding = 'UTF-8') %>%

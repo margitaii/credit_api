@@ -5,15 +5,16 @@ FROM rocker/r-ver:latest
 
 RUN R -e "install.packages(c('data.table','skimr','mltools','xgboost','rmarkdown'))"
 COPY . .
-RUN mkdir stage
+RUN mkdir stage \
 	&& mkdir data \
 	&& apt-get update \
 	&& apt-get install -y awscli
 # Copy the data from S3
-RUN aws s3 sync s3://creditapi ./data
+RUN aws s3 sync --region eu-central-1 s3://creditapi ./data
 
 # Run EAD report
-RUN R -e "library(rmarkdown); rmarkdown::render('explore.Rmd', output_dir = 'artifacts')"
+#RUN R -e "install.packages('rmarkdown', dependencies=TRUE)"
+#RUN R -e "library(rmarkdown); rmarkdown::render('explore.Rmd', output_dir = 'artifacts')"
 
 # Data preparation
 RUN Rscript prep_data.R
