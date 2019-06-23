@@ -1,16 +1,18 @@
-# Stage 1
+# Stage 1 - Offline development
+# In the first stage we estimate and create the model object and
+# save it in the artifacts directory
 FROM rocker/r-ver:latest
 
-RUN R -e "install.packages(c('data.table','skimr','mltools','xgboost'))"
+RUN R -e "install.packages(c('data.table','skimr','mltools','xgboost','rmarkdown'))"
 COPY . .
-RUN mkdir artifacts
 RUN mkdir stage
 
-RUN Rscript explore.R
+RUN R -e "library(rmarkdown); rmarkdown::render('explore.Rmd', output_dir = 'artifacts')"
+RUN Rscript prep_data.R
 RUN Rscript model.R
 
-# Stage 2
-
+# Stage 2 - Online production
+# Here we build the REST API for the scoring engine as start at port 8000
 FROM trestletech/plumber:latest
 
 RUN R -e "install.packages(c('data.table','xgboost','pROC','jsonlite','png'))"

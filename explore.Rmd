@@ -1,12 +1,12 @@
-\documentclass[a4paper]{article}
-\title{Exploration of Home Credit application dataset}
-\author{Author}
+---
+title: "Exploration of the Home Credit Dataset"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: true
+---
 
-\begin{document}
-\maketitle
-\SweaveOpts{concordance=TRUE}
-
-<<echo=FALSE>>=
+```{r, echo=FALSE, warning=FALSE}
 library(data.table)
 library(skimr)
 library(ggplot2)
@@ -22,11 +22,11 @@ descr <- descr[Table == 'application_{train|test}.csv', ]
 # Data exploration
 skim_dev <- data.table(skim(dev))
 
-@
+```
 
-\section{Explore character variables}
+## Character Variables
 Practically the empty fields and the XNA values are the missing ones so we convert these values to missing.
-<<echo=FALSE>>=
+```{r, echo=FALSE, warning=FALSE}
 # Quickly explore character variables ----
 cols <- unique(skim_dev[skim_dev$type == 'character']$variable)
 skim_dev_chr <- data.table()
@@ -42,11 +42,12 @@ dev[, (cols) := lapply(.SD, function(x) ifelse(x %in% c('','XNA'), NA, x))
       , .SDcols = cols]
 skim(dev[, cols, with=FALSE])
 rm('r', 'cols') # cleanup
-@
 
-\section{Explore flags}
+```
+
+## Flags
 We recode the flag\_own\_car and flag\_own\_reality from Yes:No to 1:0.
-<<echo=FALSE>>=
+```{r, echo=FALSE, warning=FALSE}
 # Recode the flag_own_car and flag_own_reality to 0/1
 dev$flag_own_car <- ifelse(dev$flag_own_car == 'N', as.integer(0), as.integer(1))
 dev$flag_own_realty <- ifelse(dev$flag_own_realty == 'N', as.integer(0), as.integer(1))
@@ -55,12 +56,12 @@ dev$flag_own_realty <- ifelse(dev$flag_own_realty == 'N', as.integer(0), as.inte
 cols <- tolower(descr[substr(Row,1,4) == 'FLAG' | substr(Description,1,4) == 'Flag', ]$Row)
 skim(dev[, (cols), with=F])
 rm('cols')
-@
+```
 
-\section{Explore numeric variables}
+## Numeric Variables
 We drop all those numeric input factors where the missing ratio is above 30\%.
-<<echo=FALSE>>=
 
+```{r, echo=FALSE, warning=FALSE}
 # Quickly explore numeric variables ----
 # Our general rule is that if the missing ratio is above 30%
 # then we drop the variable
@@ -68,6 +69,5 @@ skim_dev_num <- skim_dev[type == 'numeric' & stat %in% c('missing','n'), .(varia
 skim_dev_num <- dcast(skim_dev_num, variable ~ stat)
 skim_dev_num[, rat_missing := missing/n]
 
-@
+```
 
-\end{document}
